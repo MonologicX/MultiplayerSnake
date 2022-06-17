@@ -139,9 +139,9 @@ pygame.init()
 WIN = pygame.display.set_mode((WINWIDTH, WINHEIGHT))
 CLOCK = pygame.time.Clock()
 c = Client(31705, "192.168.4.57")
-startPos = strToTup(c.client.recv(2048).decode(c.FORMAT))
+startPos = strToTup(c.recieve())
 player = Player(startPos[0], startPos[1], WIN)
-startPos2 = strToTup(c.client.recv(2048).decode(c.FORMAT))
+startPos2 = strToTup(c.recieve())
 player2 = Player(startPos2[0], startPos2[1], WIN)
 players = [player, player2]
 food = [Food(WIN), Food(WIN), Food(WIN), Food(WIN), Food(WIN), Food(WIN)]
@@ -196,8 +196,8 @@ while not gameOver:
                 food.append(Food(WIN))
 
 
-    c.client.send(tupToStr((player.snake[0].x, player.snake[0].y)).encode(c.FORMAT))
-    p2Pos = strToTup(c.client.recv(2048).decode(c.FORMAT))
+    c.sendWithHeader(tupToStr((player.snake[0].x, player.snake[0].y)).encode(c.FORMAT))
+    p2Pos = strToTup(c.recieve())
     player2.snake[0].x = p2Pos[0]
     player2.snake[0].y = p2Pos[1]
 

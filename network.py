@@ -8,6 +8,7 @@ def strToTup(str):
 def tupToStr(tup):
     return "{0},{1}".format(tup[0], tup[1])
 
+
 class Server:
     def __init__(self, PORT):
 
@@ -43,11 +44,13 @@ class Server:
 
 
         if playerNum == 1:
-            conn.send(tupToStr(self.state[0]).encode(self.FORMAT))
-            conn.send(tupToStr(self.state[1]).encode(self.FORMAT))
+            print("[SERVER]: PLAYER 1 CONNECTED")
+            self.sendWithHeader(tupToStr(self.state[0]), conn)
+            self.sendWithHeader(tupToStr(self.state[1]), conn)
         elif playerNum == 2:
-            conn.send(tupToStr(self.state[1]).encode(self.FORMAT))
-            conn.send(tupToStr(self.state[0]).encode(self.FORMAT))
+            print("[SERVER]: PLAYER 2 CONNECTED")
+            self.sendWithHeader(tupToStr(self.state[1]), conn)
+            self.sendWithHeader(tupToStr(self.state[0]), conn)
 
         print("[SERVER]: {0} connected".format(addr))
 
@@ -66,14 +69,24 @@ class Server:
                 else:
                     if playerNum == 1:
                         self.state[0] = strToTup(msg)
-                        conn.send(tupToStr(self.state[1]).encode(self.FORMAT))
+                        self.sendWithHeader(tupToStr(self.state[1]), conn)
                     elif playerNum == 2:
                         self.state[1] = strToTup(msg)
-                        conn.send(tupToStr(self.state[0]).encode(self.FORMAT))
+                        self.sendWithHeader(tupToStr(self.state[0]), conn)
 
                 print("[{0}]: {1}".format(addr, msg))
 
         conn.close()
+
+    def sendWithHeader(self, message, conn):
+
+        msg = message.encode(self.FORMAT)
+
+        msgLen = str(len(msg)).encode(self.FORMAT)
+        msgLen += b'' * (self.HEADER - len(msgLen))
+
+        conn.send(msgLen)
+        conn.send(msg)
 
 class Client:
     def __init__(self, PORT, SERVER):
@@ -88,7 +101,7 @@ class Client:
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.client.connect(self.ADDRESS)
 
-    def send(self, message):
+    def sendWithHeader(self, message):
 
         msg = message.encode(self.FORMAT)
 
@@ -97,3 +110,15 @@ class Client:
 
         self.client.send(len)
         self.client.send(msg)
+
+    def recieve(self):
+
+        msgLen = self.client.recv(self.HEADER).decode(self.FORMAT)
+
+        if msgLen:
+
+            msgLen = int(msgLen)
+
+            msg = self.client.recv(msgLen).decode(self.FORMAT)
+
+            return msg
