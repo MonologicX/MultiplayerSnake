@@ -1,5 +1,8 @@
 from gameServer import *
 
+pygame.init()
+WIN = pygame.display.set_mode((WINWIDTH, WINHEIGHT))
+
 class GameClient:
     def __init__(self, SERVER, PORT=31705):
 
@@ -22,8 +25,13 @@ class GameClient:
         return pickle.loads(self.client.recv(10000))
 
     def draw(self):
+
+        WIN.fill(BLACK)
+
         for player in self.players:
-            player.draw()
+            player.draw(WIN)
+
+        pygame.display.update()
 
     def main(self):
 
@@ -48,7 +56,7 @@ class GameClient:
             self.send(self.players[0])
             self.players[1] = self.rec()
 
-            print("POS: ({0}, {1})".format(self.players[0].x, self.players[0].y))
+            print("POS: ({0}, {1})".format(self.players[0].snake[0].x, self.players[0].snake[0].y))
 
             self.draw()
             self.CLOCK.tick(FPS)

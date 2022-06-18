@@ -18,8 +18,6 @@ DARKBLUE = (0, 0, 139)
 
 BLOCKSIZE = 20
 
-pygame.init()
-WIN = pygame.display.set_mode((WINWIDTH, WINHEIGHT))
 FPS = 20
 
 class Block:
@@ -45,7 +43,7 @@ class Block:
             self.borderBottom = pygame.Rect(self.x, self.y + (BLOCKSIZE - BLOCKSIZE / 10), BLOCKSIZE, BLOCKSIZE / 10)
             self.borderRight = pygame.Rect(self.x + (BLOCKSIZE - BLOCKSIZE / 10), self.y, BLOCKSIZE / 10, BLOCKSIZE)
 
-    def draw(self):
+    def draw(self, WIN):
 
         pygame.draw.rect(WIN, self.color, self.rect)
 
@@ -106,10 +104,10 @@ class Player:
                 part.x = self.snake[self.snake.index(part) - 1].x
                 part.y = self.snake[self.snake.index(part) - 1].y
 
-    def draw(self):
+    def draw(self, WIN):
         for part in self.snake:
             part.updateRect()
-            part.draw()
+            part.draw(WIN)
 
     def addPiece(self):
 
@@ -159,7 +157,7 @@ class GameServer:
             self.send(self.players[1], conn)
         elif playerNum == 2:
             self.send(self.players[1], conn)
-            self.send(self.players[2], conn)
+            self.send(self.players[0], conn)
 
         connected = True
         while connected:
