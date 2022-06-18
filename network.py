@@ -40,26 +40,17 @@ class Server:
             print("[SERVER]: {0} active connections.".format(threading.activeCount() - 1))
             self.connections = threading.activeCount() - 1
 
-        print("[SERVER]: Starting Game")
-
     def handleClient(self, conn, addr, playerNum):
+
 
         if playerNum == 1:
             print("[SERVER]: PLAYER 1 CONNECTED")
-            msgLen, msg = self.sendWithHeader(tupToStr(self.state[0]))
-            conn.send(msgLen)
-            conn.send(msg)
-            msgLen, msg = self.sendWithHeader(tupToStr(self.state[1]))
-            conn.send(msgLen)
-            conn.send(msg)
+            self.sendWithHeader(tupToStr(self.state[0]), conn)
+            self.sendWithHeader(tupToStr(self.state[1]), conn)
         elif playerNum == 2:
             print("[SERVER]: PLAYER 2 CONNECTED")
-            msgLen, msg = self.sendWithHeader(tupToStr(self.state[1]))
-            conn.send(msgLen)
-            conn.send(msg)
-            msgLen, msg = self.sendWithHeader(tupToStr(self.state[0]))
-            conn.send(msgLen)
-            conn.send(msg)
+            self.sendWithHeader(tupToStr(self.state[1]), conn)
+            self.sendWithHeader(tupToStr(self.state[0]), conn)
 
         print("[SERVER]: {0} connected".format(addr))
 
@@ -78,27 +69,24 @@ class Server:
                 else:
                     if playerNum == 1:
                         self.state[0] = strToTup(msg)
-                        msgLen, msg = self.sendWithHeader(tupToStr(self.state[1]))
-                        conn.send(msgLen)
-                        conn.send(msg)
+                        self.sendWithHeader(tupToStr(self.state[1]), conn)
                     elif playerNum == 2:
                         self.state[1] = strToTup(msg)
-                        msgLen, msg = self.sendWithHeader(tupToStr(self.state[0]))
-                        conn.send(msgLen)
-                        conn.send(msg)
+                        self.sendWithHeader(tupToStr(self.state[0]), conn)
 
                 print("[{0}]: {1}".format(addr, msg))
 
         conn.close()
 
-    def sendWithHeader(self, message):
+    def sendWithHeader(self, message, conn):
 
         msg = message.encode(self.FORMAT)
 
         msgLen = str(len(msg)).encode(self.FORMAT)
         msgLen += b'' * (self.HEADER - len(msgLen))
 
-        return msgLen, msg
+        conn.send(msgLen)
+        conn.send(msg)
 
 class Client:
     def __init__(self, PORT, SERVER):
@@ -133,5 +121,4 @@ class Client:
 
             msg = self.client.recv(msgLen).decode(self.FORMAT)
 
-            print("MSG: {0}".format(msg))
             return msg
