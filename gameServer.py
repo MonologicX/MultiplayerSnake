@@ -1,4 +1,5 @@
 import pygame
+import random
 import pickle
 import socket
 import threading
@@ -70,15 +71,17 @@ class Player:
         if move == "LEFT" and self.direction != "RIGHT":
             self.direction = "LEFT"
             self.snake[0].x -= BLOCKSIZE
-        if move == "RIGHT" and self.direction != "LEFT":
+        elif move == "RIGHT" and self.direction != "LEFT":
             self.direction = "RIGHT"
             self.snake[0].x += BLOCKSIZE
-        if move == "UP" and self.direction != "DOWN":
+        elif move == "UP" and self.direction != "DOWN":
             self.direction = "UP"
             self.snake[0].y -= BLOCKSIZE
-        if move == "DOWN" and self.direction != "UP":
+        elif move == "DOWN" and self.direction != "UP":
             self.direction = "DOWN"
             self.snake[0].y += BLOCKSIZE
+        else:
+            move == None
 
         if move == None:
             if self.direction == "RIGHT":
@@ -120,6 +123,11 @@ class Player:
         elif self.direction == "DOWN":
             self.snake.append(Block(self.snake[-1].x, self.snake[-1].y - BLOCKSIZE, color=self.color, borderColor=self.borderColor))
 
+class Food(Block):
+    def __init__(self, INDEX, color=GREEN, borderColor=DARKGREEN):
+        super().__init__(random.randint(0, (WINWIDTH - BLOCKSIZE) / BLOCKSIZE) * BLOCKSIZE, random.randint(0, (WINHEIGHT - BLOCKSIZE) / BLOCKSIZE) * BLOCKSIZE, color=color, borderColor=borderColor)
+        self.index = INDEX
+
 class DISCONNECTOBJ:
     def __init__(self):
         pass
@@ -134,7 +142,8 @@ class GameServer:
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server.bind(self.ADDRESS)
 
-        self.players = [Player(200, 200), Player(500, 500, color=GREEN, borderColor=DARKGREEN)]
+        self.players = [Player(200, 200), Player(500, 500, color=RED, borderColor=DARKRED)]
+        self.food = Food(0)
 
         self.start()
 
@@ -159,6 +168,8 @@ class GameServer:
             self.send(self.players[1], conn)
             self.send(self.players[0], conn)
 
+        self.send(self.food, conn)
+
         connected = True
         while connected:
 
@@ -168,12 +179,18 @@ class GameServer:
                 connected = False
                 break
 
-            if playerNum == 1:
-                self.players[0] = obj
-                self.send(self.players[1], conn)
-            elif playerNum == 2:
-                self.players[1] = obj
-                self.send(self.players[0], conn)
+            if type(obj) == Player:
+                if playerNum == 1:
+                    self.players[0] = obj
+                    self.send(self.players[1], conn)
+                elif playerNum == 2:
+                    self.players[1] = obj
+                    self.send(self.players[0], conn)
+
+            if type(obj) == Food:
+                self.food = obj
+
+                self.send(self.food, conn)
 
         conn.close()
 
@@ -182,5 +199,5 @@ class GameServer:
 
     def rec(self, conn):
 
-        obj = pickle.loads(conn.recv(10000))
+        obj = pickle.loads(conn.recv(20000))
         return obj

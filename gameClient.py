@@ -14,7 +14,9 @@ class GameClient:
         self.client.connect(self.ADDRESS)
 
         self.CLOCK = pygame.time.Clock()
+
         self.players = [self.rec(), self.rec()]
+        self.food = self.rec()
 
         self.main()
 
@@ -22,7 +24,7 @@ class GameClient:
         self.client.send(pickle.dumps(obj))
 
     def rec(self):
-        return pickle.loads(self.client.recv(10000))
+        return pickle.loads(self.client.recv(20000))
 
     def draw(self):
 
@@ -31,6 +33,8 @@ class GameClient:
         for player in self.players:
             player.draw(WIN)
 
+        self.food.draw(WIN)
+
         pygame.display.update()
 
     def main(self):
@@ -38,6 +42,7 @@ class GameClient:
         gameOver = False
         while not gameOver:
 
+            move = None
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.send(DISCONNECTOBJ())
@@ -45,18 +50,29 @@ class GameClient:
                     sys.exit()
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_RIGHT:
-                        self.players[0].move(move="RIGHT")
+                        move = "RIGHT"
                     if event.key == pygame.K_LEFT:
-                        self.players[0].move(move="LEFT")
+                        move = "LEFT"
                     if event.key == pygame.K_UP:
-                        self.players[0].move(move="UP")
+                        move = "UP"
                     if event.key == pygame.K_DOWN:
-                        self.players[0].move(move="DOWN")
+                        move = "DOWN"
+
+
+            self.players[0].move(move=move)
+
+
+            if self.players[0].snake[0].rect.colliderect(self.food.rect):
+                self.players[0].addPiece()
+                self.food = Food(0)
+
+            self.send(self.food)
+            self.food = self.rec()
+
 
             self.send(self.players[0])
             self.players[1] = self.rec()
-
-            print("POS: ({0}, {1})".format(self.players[0].snake[0].x, self.players[0].snake[0].y))
+            #print("POS: ({0}, {1})".format(self.players[0].snake[0].x, self.players[0].snake[0].y))
 
             self.draw()
             self.CLOCK.tick(FPS)
