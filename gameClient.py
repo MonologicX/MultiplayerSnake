@@ -4,18 +4,19 @@ pygame.init()
 WIN = pygame.display.set_mode((WINWIDTH, WINHEIGHT))
 
 class GameClient:
-    def __init__(self, SERVER, PORT=31705):
+    def __init__(self, SERVERIP="192.168.4.57", PORT=31705):
 
         self.PORT = PORT
-        self.SERVER = SERVER
+        self.SERVER = SERVERIP
         self.ADDRESS = (self.SERVER, self.PORT)
+
+        self.CLOCK = pygame.time.Clock()
 
         self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.client.connect(self.ADDRESS)
 
-        self.CLOCK = pygame.time.Clock()
-
         self.players = [self.rec(), self.rec()]
+        self.food = self.rec()
 
         self.main()
 
@@ -32,10 +33,7 @@ class GameClient:
         for player in self.players:
             player.draw(WIN)
 
-        for food in self.players[0].food:
-            food.draw(WIN)
-
-        for food in self.players[1].food:
+        for food in self.food:
             food.draw(WIN)
 
         pygame.display.update()
@@ -64,22 +62,19 @@ class GameClient:
 
             self.players[0].move(move=move)
 
-            for food in self.players[0].food:
+            for food in self.food:
                 if self.players[0].snake[0].rect.colliderect(food.rect):
                     self.players[0].addPiece()
-                    self.players[0].food[self.players[0].food.index(food)] = Food(self.players[0].food.index(food))
-
-            for food in self.players[1].food:
-                if self.players[0].snake[0].rect.colliderect(food.rect):
-                    self.players[0].addPiece()
-                    self.players[0].food[self.players[1].food.index(food)] = Food(self.players[1].food.index(food))
+                    self.food[self.food.index(food)] = Food()
+                    self.send(self.food)
 
 
             self.send(self.players[0])
             self.players[1] = self.rec()
+            self.food = self.rec()
             #print("POS: ({0}, {1})".format(self.players[0].snake[0].x, self.players[0].snake[0].y))
 
             self.draw()
             self.CLOCK.tick(FPS)
 
-c = GameClient("192.168.4.57")
+c = GameClient()

@@ -124,16 +124,15 @@ class Player:
             self.snake.append(Block(self.snake[-1].x, self.snake[-1].y - BLOCKSIZE, color=self.color, borderColor=self.borderColor))
 
 class Food(Block):
-    def __init__(self, INDEX, color=GREEN, borderColor=DARKGREEN):
+    def __init__(self, color=GREEN, borderColor=DARKGREEN):
         super().__init__(random.randint(0, (WINWIDTH - BLOCKSIZE) / BLOCKSIZE) * BLOCKSIZE, random.randint(0, (WINHEIGHT - BLOCKSIZE) / BLOCKSIZE) * BLOCKSIZE, color=color, borderColor=borderColor)
-        self.index = INDEX
 
 class DISCONNECTOBJ:
     def __init__(self):
         pass
 
 class GameServer:
-    def __init__(self, PORT=31705):
+    def __init__(self, numFood, PORT=31705):
 
         self.PORT = PORT
         self.SERVER = socket.gethostbyname(socket.gethostname())
@@ -144,9 +143,9 @@ class GameServer:
 
         self.players = [Player(200, 200), Player(500, 500, color=RED, borderColor=DARKRED)]
 
-        self.food = [Food(0), Food(1), Food(2)]
-        for player in self.players:
-            player.food = self.food
+        self.food = []
+        for i in range(numFood):
+            self.food.append(Food())
 
         self.start()
 
@@ -171,8 +170,13 @@ class GameServer:
             self.send(self.players[1], conn)
             self.send(self.players[0], conn)
 
+        self.send(self.food, conn)
+
         connected = True
         while connected:
+
+            for player in self.players:
+                player.food = self.food
 
             obj = self.rec(conn)
 
@@ -183,12 +187,16 @@ class GameServer:
             if type(obj) == Player:
                 if playerNum == 1:
                     self.players[0] = obj
-                    self.players[1].food = obj.food
                     self.send(self.players[1], conn)
                 elif playerNum == 2:
                     self.players[1] = obj
-                    self.players[0].food = obj.food
                     self.send(self.players[0], conn)
+
+                self.send(self.food, conn)
+
+            if type(obj) == list:
+                if type(obj[0]) == Food:
+                    self.food = obj
 
         conn.close()
 

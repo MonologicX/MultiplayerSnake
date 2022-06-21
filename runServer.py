@@ -1,3 +1,3 @@
 from gameServer import *
 
-g = GameServer()
+g = GameServer(10)
