@@ -16,7 +16,6 @@ class GameClient:
         self.CLOCK = pygame.time.Clock()
 
         self.players = [self.rec(), self.rec()]
-        self.food = self.rec()
 
         self.main()
 
@@ -33,7 +32,11 @@ class GameClient:
         for player in self.players:
             player.draw(WIN)
 
-        self.food.draw(WIN)
+        for food in self.players[0].food:
+            food.draw(WIN)
+
+        for food in self.players[1].food:
+            food.draw(WIN)
 
         pygame.display.update()
 
@@ -61,13 +64,15 @@ class GameClient:
 
             self.players[0].move(move=move)
 
+            for food in self.players[0].food:
+                if self.players[0].snake[0].rect.colliderect(food.rect):
+                    self.players[0].addPiece()
+                    self.players[0].food[self.players[0].food.index(food)] = Food(self.players[0].food.index(food))
 
-            if self.players[0].snake[0].rect.colliderect(self.food.rect):
-                self.players[0].addPiece()
-                self.food = Food(0)
-
-            self.send(self.food)
-            self.food = self.rec()
+            for food in self.players[1].food:
+                if self.players[0].snake[0].rect.colliderect(food.rect):
+                    self.players[0].addPiece()
+                    self.players[0].food[self.players[1].food.index(food)] = Food(self.players[1].food.index(food))
 
 
             self.send(self.players[0])

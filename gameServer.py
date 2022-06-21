@@ -5,7 +5,7 @@ import socket
 import threading
 import sys
 
-WINWIDTH, WINHEIGHT = (1400, 1000)
+WINWIDTH, WINHEIGHT = (700, 1000)
 
 #Colors
 WHITE = (255, 255, 255)
@@ -64,7 +64,7 @@ class Player:
             self.snake.append(Block(self.snake[-1].x - BLOCKSIZE, self.snake[-1].y, color=self.color, borderColor=self.borderColor))
         self.direction = "RIGHT"
 
-        self.score = 0
+        self.food = []
 
     def move(self, move=None):
 
@@ -143,7 +143,10 @@ class GameServer:
         self.server.bind(self.ADDRESS)
 
         self.players = [Player(200, 200), Player(500, 500, color=RED, borderColor=DARKRED)]
-        self.food = Food(0)
+
+        self.food = [Food(0), Food(1), Food(2)]
+        for player in self.players:
+            player.food = self.food
 
         self.start()
 
@@ -168,8 +171,6 @@ class GameServer:
             self.send(self.players[1], conn)
             self.send(self.players[0], conn)
 
-        self.send(self.food, conn)
-
         connected = True
         while connected:
 
@@ -182,15 +183,12 @@ class GameServer:
             if type(obj) == Player:
                 if playerNum == 1:
                     self.players[0] = obj
+                    self.players[1].food = obj.food
                     self.send(self.players[1], conn)
                 elif playerNum == 2:
                     self.players[1] = obj
+                    self.players[0].food = obj.food
                     self.send(self.players[0], conn)
-
-            if type(obj) == Food:
-                self.food = obj
-
-                self.send(self.food, conn)
 
         conn.close()
 
