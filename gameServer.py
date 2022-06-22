@@ -5,7 +5,7 @@ import socket
 import threading
 import sys
 
-WINWIDTH, WINHEIGHT = (700, 1000)
+WINWIDTH, WINHEIGHT = (900, 1000)
 
 #Colors
 WHITE = (255, 255, 255)
@@ -207,3 +207,5 @@ class GameServer:
 
         obj = pickle.loads(conn.recv(20000))
         return obj
+
+g = GameServer(10)
